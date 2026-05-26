@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_ID="${1:?usage: gnome-dakhilsaver-launch APP_ID}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+RUNNER="$SCRIPT_DIR/gnome-dakhilsaver-run"
+
+pick_terminal() {
+  if [[ -n "${DAKHILSAVER_TERMINAL:-}" ]]; then
+    printf '%s\n' "$DAKHILSAVER_TERMINAL"
+    return
+  fi
+
+  for terminal in ghostty kitty alacritty foot; do
+    if command -v "$terminal" >/dev/null 2>&1; then
+      printf '%s\n' "$terminal"
+      return
+    fi
+  done
+}
+
+terminal="$(pick_terminal)"
+if [[ -z "$terminal" ]]; then
+  echo "gnome-dakhilsaver: install ghostty, kitty, alacritty, or foot." >&2
+  exit 1
+fi
+
+case "$terminal" in
+  *ghostty*|ghostty)
+    # --gtk-single-instance=false: each monitor gets its own process so the
+    # per-monitor --class is honored. With single-instance on, Ghostty applies
+    # --class only to the first window and routes the rest to one app id,
+    # collapsing every monitor onto one.
+    exec ghostty "--class=$APP_ID" --gtk-single-instance=false \
+      --font-size=18 -e bash "$RUNNER"
+    ;;
+  *kitty*|kitty)
+    exec kitty --class "$APP_ID" --override font_size=18 \
+      --override window_padding_width=0 -e bash "$RUNNER"
+    ;;
+  *Alacritty*|*alacritty*|alacritty)
+    exec alacritty --class "$APP_ID,$APP_ID" -e bash "$RUNNER"
+    ;;
+  *foot*|foot)
+    exec foot "--app-id=$APP_ID" -e bash "$RUNNER"
+    ;;
+  *)
+    echo "gnome-dakhilsaver: unsupported terminal '$terminal'." >&2
+    exit 1
+    ;;
+esac
+

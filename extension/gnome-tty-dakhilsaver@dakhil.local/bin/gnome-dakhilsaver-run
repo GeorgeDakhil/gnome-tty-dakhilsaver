@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+DATA_HOME="${XDG_DATA_HOME:-$HOME/.local/share}"
+TEXT_FILE="${DAKHILSAVER_TEXT_FILE:-$CONFIG_HOME/gnome-tty-dakhilsaver/screensaver.txt}"
+VENV_TTE="$DATA_HOME/gnome-tty-dakhilsaver/venv/bin/tte"
+effect_pid=""
+
+find_tte() {
+  if [[ -n "${DAKHILSAVER_TTE:-}" && -x "${DAKHILSAVER_TTE:-}" ]]; then
+    printf '%s\n' "$DAKHILSAVER_TTE"
+  elif command -v tte >/dev/null 2>&1; then
+    command -v tte
+  elif [[ -x "$VENV_TTE" ]]; then
+    printf '%s\n' "$VENV_TTE"
+  else
+    return 1
+  fi
+}
+
+cleanup() {
+  printf '\033[?25h'
+  if [[ -n "$effect_pid" ]]; then
+    kill "$effect_pid" >/dev/null 2>&1 || true
+    wait "$effect_pid" >/dev/null 2>&1 || true
+  fi
+}
+
+trap 'exit 0' SIGINT SIGTERM SIGHUP SIGQUIT
+trap cleanup EXIT
+
+tte_bin="$(find_tte)" || {
+  echo "gnome-dakhilsaver-run: tte was not found. Run ./install.sh." >&2
+  sleep 4
+  exit 1
+}
+
+if [[ ! -f "$TEXT_FILE" ]]; then
+  mkdir -p "$(dirname "$TEXT_FILE")"
+  printf 'DAKHIL\nSAVER\n' > "$TEXT_FILE"
+fi
+
+printf '\033]11;rgb:00/00/00\007\033[?25l'
+
+while true; do
+  "$tte_bin" -i "$TEXT_FILE" \
+    --frame-rate 120 \
+    --canvas-width 0 \
+    --canvas-height 0 \
+    --reuse-canvas \
+    --anchor-canvas c \
+    --anchor-text c \
+    --random-effect \
+    --no-eol \
+    --no-restore-cursor &
+  effect_pid="$!"
+
+  while kill -0 "$effect_pid" >/dev/null 2>&1; do
+    if IFS= read -rsn1 -t 0.2; then
+      exit 0
+    fi
+  done
+
+  wait "$effect_pid" >/dev/null 2>&1 || true
+  effect_pid=""
+done
+

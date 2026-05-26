@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.gnome-tty-dakhilsaver"
+          path="/org/gnome/shell/extensions/gnome-tty-dakhilsaver/">
+    <key name="toggle-saver" type="as">
+      <default>['&lt;Super&gt;F12']</default>
+      <summary>Keyboard shortcut to toggle the screensaver effect</summary>
+    </key>
+    <key name="idle-timeout" type="i">
+      <default>600</default>
+      <range min="0" max="86400"/>
+      <summary>Idle seconds before the screensaver starts automatically</summary>
+      <description>
+        Seconds without keyboard or pointer input before the effect starts on
+        its own. Set to 0 to disable automatic activation and trigger the
+        effect only with the keyboard shortcut.
+      </description>
+    </key>
+  </schema>
+</schemalist>
+

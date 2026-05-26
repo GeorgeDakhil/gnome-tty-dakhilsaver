@@ -1,0 +1,9 @@
+{
+  "uuid": "gnome-tty-dakhilsaver@dakhil.local",
+  "name": "GNOME TTY Dakhilsaver",
+  "description": "Fullscreen TerminalTextEffects screensaver windows on every monitor.",
+  "shell-version": ["50"],
+  "settings-schema": "org.gnome.shell.extensions.gnome-tty-dakhilsaver",
+  "url": "https://github.com/GeorgeDakhil/gnome-tty-dakhilsaver"
+}
+
